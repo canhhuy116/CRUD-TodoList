@@ -13,7 +13,7 @@ const app: Express = express();
 const PORT = process.env.PORT || 8000;
 
 app.use(morgan('combined'));
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
