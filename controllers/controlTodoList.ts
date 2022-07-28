@@ -60,11 +60,10 @@ export const deleteTodo = async (req: Request, res: Response) => {
         message: 'missing requires params',
       });
     }
-    const todo = await TodoListModel.findOneAndDelete({ id: todoID });
+    console.log(todoID);
+    const todo = await TodoListModel.deleteOne({ id: todoID });
 
-    return res.status(200).json({
-      message: 'ok',
-    });
+    return res.status(200).json(todo);
   } catch (error) {
     res.status(500).json({ Error: error });
   }
