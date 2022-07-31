@@ -7,7 +7,7 @@ import {
 import express from 'express';
 
 const router = express.Router();
-//http://localhost:5000/TodoList
+//http://localhost:5000/todos
 
 router.get('/', readTodo);
 router.post('/', createTodo);

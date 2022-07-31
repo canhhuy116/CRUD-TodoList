@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import TodoList from '../routers/TodoList';
+import Users from '../routers/Users';
 import cors from 'cors';
 import session from 'express-session';
 import { connectDB, store } from '../config/db';
@@ -33,6 +34,7 @@ app.use(
 );
 
 app.use('/todos', TodoList);
+app.use('/users', Users);
 
 connectDB().then(() => {
   console.log('Connected to DB');
