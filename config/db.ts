@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import connectMongo from 'connect-mongodb-session';
+import session from 'express-session';
 
 const URI = process.env.URI_DB || 'mongodb://127.0.0.1:27017/TodoList';
 
@@ -11,4 +13,12 @@ const connectDB = async () => {
   }
 };
 
-export default connectDB;
+const MongoDBStore = connectMongo(session);
+const store = new MongoDBStore({
+  uri: URI,
+  collection: 'mySessions',
+  expiresKey: `_ts`,
+  expiresAfterSeconds: 60 * 60 * 24 * 14,
+});
+
+export { connectDB, store };

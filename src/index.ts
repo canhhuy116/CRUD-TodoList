@@ -5,7 +5,8 @@ import dotenv from 'dotenv';
 import morgan from 'morgan';
 import TodoList from '../routers/TodoList';
 import cors from 'cors';
-import connectDB from '../config/db';
+import session from 'express-session';
+import { connectDB, store } from '../config/db';
 
 dotenv.config();
 
@@ -18,6 +19,18 @@ app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(
+  session({
+    secret: 'secret',
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    },
+    store: store,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 app.use('/todos', TodoList);
 
