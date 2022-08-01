@@ -16,7 +16,7 @@ const app: Express = express();
 const PORT = process.env.PORT || 8000;
 
 app.use(morgan('combined'));
-app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -25,6 +25,7 @@ app.use(
   session({
     secret: 'secret',
     cookie: {
+      httpOnly: false,
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
     },
     store: store,

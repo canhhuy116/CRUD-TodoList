@@ -12,9 +12,11 @@ export const login = async (req: Request, res: Response) => {
       req.session.isAuth = true;
       req.session.username = user.username;
       res.json({
-        _id: user.id,
-        name: user.name,
-        username: user.username,
+        data: {
+          _id: user.id,
+          name: user.name,
+          username: user.username,
+        },
         cookie: req.session,
       });
     } else {
@@ -75,11 +77,15 @@ export const dashboard = (req: Request, res: Response) => {
   res.status(200).json(username);
 };
 
-export const logout = (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) throw err;
-    res.status(200).json({
-      message: 'Logout',
+export const logout = async (req: Request, res: Response) => {
+  try {
+    req.session.destroy((err) => {
+      if (err) throw err;
+      res.status(200).json({
+        message: 'Logout',
+      });
     });
-  });
+  } catch (error) {
+    res.status(500).json({ Error: error });
+  }
 };
