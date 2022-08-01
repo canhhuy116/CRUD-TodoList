@@ -10,15 +10,31 @@ export const readTodo = async (req: Request, res: Response) => {
   }
 };
 
+export const readTodoByUsername = async (req: Request, res: Response) => {
+  try {
+    const username = req.params.username;
+    const TodoList = await TodoListModel.find({ username: username });
+    res.status(200).json(TodoList);
+  } catch (err) {
+    res.status(500).json({ error: err });
+  }
+};
+
 export const createTodo = async (req: Request, res: Response) => {
   try {
-    const newTodo = req.body;
+    const { job, username } = req.body;
 
-    if (!newTodo) {
+    if (!job || !username) {
       return res.status(200).json({
         message: 'missing requires params',
       });
     }
+    const newTodo = {
+      id: job.id,
+      name: job.name,
+      description: job.description,
+      username: username,
+    };
 
     const todo = new TodoListModel(newTodo);
     await todo.save();

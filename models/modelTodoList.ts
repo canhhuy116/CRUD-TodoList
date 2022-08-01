@@ -13,6 +13,10 @@ const schema = new mongoose.Schema(
     description: {
       type: String,
     },
+    username: {
+      type: String,
+      require: true,
+    },
   },
   { timestamps: true }
 );
