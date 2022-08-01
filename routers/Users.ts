@@ -1,12 +1,12 @@
 import express from 'express';
-import { Gettodos, login, logout, register } from '../controllers/controlUser';
+import { dashboard, login, logout, register } from '../controllers/controlUser';
 import { isAuth } from '../middleware/isAuth';
 
 const router = express.Router();
 
 router.post('/login', login);
 router.post('/register', register);
-router.get('/todos', isAuth, Gettodos);
+router.get('/', isAuth, dashboard);
 router.post('/logout', logout);
 
 export default router;

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import md5 from 'md5';
+import bcrypt from 'bcrypt';
 import { UserModel } from '../models/modelUser';
 
 export const login = async (req: Request, res: Response) => {
@@ -8,18 +8,19 @@ export const login = async (req: Request, res: Response) => {
 
     const user = await UserModel.findOne({ username });
 
-    if (!user) {
-      return res.redirect('/login');
+    if (user && (await bcrypt.compare(password, user.password))) {
+      req.session.isAuth = true;
+      req.session.username = user.username;
+      res.json({
+        _id: user.id,
+        name: user.name,
+        username: user.username,
+        cookie: req.session,
+      });
+    } else {
+      res.status(400);
+      throw new Error('Invalid credentials');
     }
-
-    const isMatch = md5(password) === user.password;
-
-    if (!isMatch) {
-      return res.redirect('/login');
-    }
-    req.session.isAuth = true;
-    req.session.username = user.username;
-    res.redirect('/todos');
   } catch (error) {
     res.status(500).json({ Error: error });
   }
@@ -27,29 +28,49 @@ export const login = async (req: Request, res: Response) => {
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
+    const { name, username, password } = req.body;
 
-    let user = await UserModel.findOne({ username });
-
-    if (user) {
-      return res.redirect('/register');
+    if (!name || !username || !password) {
+      res.status(400);
+      throw new Error('Please add all fields');
     }
 
-    const hasdPsw = md5(password);
+    // Check if user exists
+    let userExists = await UserModel.findOne({ username });
 
-    user = new UserModel({
+    if (userExists) {
+      res.status(400);
+      throw new Error('User already exists');
+    }
+
+    // hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashPsw = await bcrypt.hash(password, salt);
+
+    // create user
+    const user = new UserModel({
+      name,
       username,
-      password: hasdPsw,
+      password: hashPsw,
     });
 
     await user.save();
-    res.redirect('/login');
+    if (user) {
+      res.status(201).json({
+        _id: user.id,
+        name: user.name,
+        username: user.username,
+      });
+    } else {
+      res.status(400);
+      throw new Error('Invalid user data');
+    }
   } catch (error) {
     res.status(500).json({ Error: error });
   }
 };
 
-export const Gettodos = (req: Request, res: Response) => {
+export const dashboard = (req: Request, res: Response) => {
   const username = req.session.username;
   res.status(200).json(username);
 };
@@ -57,6 +78,8 @@ export const Gettodos = (req: Request, res: Response) => {
 export const logout = (req: Request, res: Response) => {
   req.session.destroy((err) => {
     if (err) throw err;
-    res.redirect('/login');
+    res.status(200).json({
+      message: 'Logout',
+    });
   });
 };
