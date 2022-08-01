@@ -59,9 +59,11 @@ export const register = async (req: Request, res: Response) => {
     await user.save();
     if (user) {
       res.status(201).json({
-        _id: user.id,
-        name: user.name,
-        username: user.username,
+        data: {
+          _id: user.id,
+          name: user.name,
+          username: user.username,
+        },
       });
     } else {
       res.status(400);
