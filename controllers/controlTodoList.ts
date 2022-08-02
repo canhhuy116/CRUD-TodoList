@@ -39,11 +39,17 @@ export const createTodo = async (req: Request, res: Response) => {
 export const updateTodo = async (req: Request, res: Response) => {
   try {
     const updateTodo = req.body;
-    // const username = req.session.username;
+    const username = req.session.username;
 
     if (!updateTodo) {
       return res.status(200).json({
         message: 'missing requires params',
+      });
+    }
+    const checkTodo = await TodoListModel.findOne({ id: updateTodo.id });
+    if (checkTodo?.username !== username) {
+      return res.status(200).json({
+        message: 'Todo is not yours',
       });
     }
 
@@ -62,13 +68,20 @@ export const updateTodo = async (req: Request, res: Response) => {
 export const deleteTodo = async (req: Request, res: Response) => {
   try {
     const todoID = req.params.id;
+    const username = req.session.username;
+
+    const checkTodo = await TodoListModel.findOne({ id: todoID });
+    if (checkTodo?.username !== username) {
+      return res.status(200).json({
+        message: 'Todo is not yours',
+      });
+    }
 
     if (!todoID) {
       return res.status(200).json({
         message: 'missing requires params',
       });
     }
-    console.log(todoID);
     const todo = await TodoListModel.deleteOne({ id: todoID });
 
     return res.status(200).json(todo);
