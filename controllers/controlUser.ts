@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { UserModel } from '../models/modelUser';
+import passport from 'passport';
+
+const CLIENT_URL = 'http://localhost:3000/';
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -86,6 +89,32 @@ export const logout = async (req: Request, res: Response) => {
       res.status(200).json({
         message: 'Logout',
       });
+    });
+  } catch (error) {
+    res.status(500).json({ Error: error });
+  }
+};
+
+export const loginFailed = async (req: Request, res: Response) => {
+  res.status(401).json({
+    success: false,
+    message: 'failure',
+  });
+};
+
+export const loginGG = async (req: Request, res: Response) => {
+  try {
+    passport.authenticate('google', { scope: ['profile'] });
+  } catch (error) {
+    res.status(500).json({ Error: error });
+  }
+};
+
+export const loginGoogleCB = async (req: Request, res: Response) => {
+  try {
+    passport.authenticate('google', {
+      successRedirect: CLIENT_URL,
+      failureRedirect: '/login/failed',
     });
   } catch (error) {
     res.status(500).json({ Error: error });

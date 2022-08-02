@@ -1,18 +1,9 @@
 import { TodoListModel } from './../models/modelTodoList';
 import { Request, Response } from 'express';
 
-export const readTodo = async (req: Request, res: Response) => {
-  try {
-    const TodoList = await TodoListModel.find();
-    res.status(200).json(TodoList);
-  } catch (err) {
-    res.status(500).json({ error: err });
-  }
-};
-
 export const readTodoByUsername = async (req: Request, res: Response) => {
   try {
-    const username = req.params.username;
+    const username = req.session.username;
     const TodoList = await TodoListModel.find({ username: username });
     res.status(200).json(TodoList);
   } catch (err) {
@@ -48,6 +39,7 @@ export const createTodo = async (req: Request, res: Response) => {
 export const updateTodo = async (req: Request, res: Response) => {
   try {
     const updateTodo = req.body;
+    // const username = req.session.username;
 
     if (!updateTodo) {
       return res.status(200).json({

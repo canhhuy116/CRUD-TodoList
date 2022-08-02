@@ -8,6 +8,8 @@ import Users from '../routers/Users';
 import cors from 'cors';
 import session from 'express-session';
 import { connectDB, store } from '../config/db';
+import passport from './passport';
+import auth from '../routers/auth';
 
 dotenv.config();
 
@@ -34,8 +36,12 @@ app.use(
   })
 );
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use('/todos', TodoList);
 app.use('/users', Users);
+app.use('/auth', auth);
 
 connectDB().then(() => {
   console.log('Connected to DB');
