@@ -13,9 +13,10 @@ const schema = new mongoose.Schema(
     description: {
       type: String,
     },
-    username: {
-      type: String,
-      require: true,
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'User',
     },
   },
   { timestamps: true }

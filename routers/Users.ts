@@ -1,19 +1,11 @@
 import express from 'express';
-import {
-  dashboard,
-  login,
-  loginFailed,
-  logout,
-  register,
-} from '../controllers/controlUser';
-import { isAuth } from '../middleware/isAuth';
+import { getMe, login, register } from '../controllers/controlUser';
+import protect from '../middlewares/authMiddlware';
 
 const router = express.Router();
 
 router.post('/login', login);
-router.get('/login/failed', loginFailed);
 router.post('/register', register);
-router.get('/', isAuth, dashboard);
-router.post('/logout', logout);
+router.get('/me', protect, getMe);
 
 export default router;

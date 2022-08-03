@@ -6,12 +6,11 @@ import morgan from 'morgan';
 import TodoList from '../routers/TodoList';
 import Users from '../routers/Users';
 import cors from 'cors';
-import session from 'express-session';
-import { connectDB, store } from '../config/db';
-import passport from './passport';
-import auth from '../routers/auth';
+import connectDB from '../config/db';
+import errorHandler from '../middlewares/errorMiddleware';
 
 dotenv.config();
+connectDB();
 
 const app: Express = express();
 
@@ -23,29 +22,11 @@ app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(
-  session({
-    secret: 'secret',
-    cookie: {
-      httpOnly: false,
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-    },
-    store: store,
-    resave: false,
-    saveUninitialized: false,
-  })
-);
-
-app.use(passport.initialize());
-app.use(passport.session());
-
 app.use('/todos', TodoList);
 app.use('/users', Users);
-app.use('/auth', auth);
 
-connectDB().then(() => {
-  console.log('Connected to DB');
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+app.use(errorHandler);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });

@@ -1,37 +1,14 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import { UserModel } from '../models/modelUser';
-import passport from 'passport';
+import { UserModel } from '../models/userModel';
+import jwt from 'jsonwebtoken';
+import asyncHandler from 'express-async-handler';
 
-const CLIENT_URL = 'http://localhost:3000/';
+// @desc    Register new user
+// @route   POST /api/users
+// @access  Public
 
-export const login = async (req: Request, res: Response) => {
-  try {
-    const { username, password } = req.body;
-
-    const user = await UserModel.findOne({ username });
-
-    if (user && (await bcrypt.compare(password, user.password))) {
-      req.session.isAuth = true;
-      req.session.username = user.username;
-      res.json({
-        data: {
-          _id: user.id,
-          name: user.name,
-          username: user.username,
-        },
-        cookie: req.session,
-      });
-    } else {
-      res.status(400);
-      throw new Error('Invalid credentials');
-    }
-  } catch (error) {
-    res.status(500).json({ Error: error });
-  }
-};
-
-export const register = async (req: Request, res: Response) => {
+export const register = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { name, username, password } = req.body;
 
@@ -59,13 +36,13 @@ export const register = async (req: Request, res: Response) => {
       password: hashPsw,
     });
 
-    await user.save();
     if (user) {
       res.status(201).json({
         data: {
           _id: user.id,
           name: user.name,
           username: user.username,
+          token: generateToken(user.id),
         },
       });
     } else {
@@ -75,48 +52,45 @@ export const register = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ Error: error });
   }
-};
+});
 
-export const dashboard = (req: Request, res: Response) => {
-  const username = req.session.username;
-  res.status(200).json(username);
-};
+// @desc    Authenticate a user
+// @route   POST /api/users/login
+// @access  Public
 
-export const logout = async (req: Request, res: Response) => {
+export const login = asyncHandler(async (req: Request, res: Response) => {
   try {
-    req.session.destroy((err) => {
-      if (err) throw err;
-      res.status(200).json({
-        message: 'Logout',
+    const { username, password } = req.body;
+
+    // Check for user email
+    const user = await UserModel.findOne({ username });
+
+    if (user && (await bcrypt.compare(password, user.password))) {
+      res.json({
+        _id: user.id,
+        name: user.name,
+        username: user.username,
+        token: generateToken(user.id),
       });
-    });
+    } else {
+      res.status(400);
+      throw new Error('Invalid credentials');
+    }
   } catch (error) {
     res.status(500).json({ Error: error });
   }
-};
+});
 
-export const loginFailed = async (req: Request, res: Response) => {
-  res.status(401).json({
-    success: false,
-    message: 'failure',
+// @desc    Get user data
+// @route   GET /api/users/me
+// @access  Private
+export const getMe = asyncHandler(async (req: Request, res: Response) => {
+  res.status(200).json(req.user);
+});
+
+// Generate JWT
+const generateToken = (id: string) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '1h',
   });
-};
-
-export const loginGG = async (req: Request, res: Response) => {
-  try {
-    passport.authenticate('google', { scope: ['profile'] });
-  } catch (error) {
-    res.status(500).json({ Error: error });
-  }
-};
-
-export const loginGoogleCB = async (req: Request, res: Response) => {
-  try {
-    passport.authenticate('google', {
-      successRedirect: CLIENT_URL,
-      failureRedirect: '/login/failed',
-    });
-  } catch (error) {
-    res.status(500).json({ Error: error });
-  }
 };
