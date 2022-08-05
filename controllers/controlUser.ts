@@ -31,19 +31,16 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
     // create user
     const user = new UserModel({
-      name,
-      username,
+      name: name,
+      username: username,
       password: hashPsw,
     });
+    await user.save();
 
     if (user) {
       res.status(201).json({
-        data: {
-          _id: user.id,
-          name: user.name,
-          username: user.username,
-          token: generateToken(user.id),
-        },
+        username: user.username,
+        token: generateToken(user.id),
       });
     } else {
       res.status(400);
@@ -67,8 +64,6 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
     if (user && (await bcrypt.compare(password, user.password))) {
       res.json({
-        _id: user.id,
-        name: user.name,
         username: user.username,
         token: generateToken(user.id),
       });

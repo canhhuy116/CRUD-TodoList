@@ -5,17 +5,16 @@ import { Request, Response } from 'express';
 const readTodoByUsername = asyncHandler(async (req: Request, res: Response) => {
   try {
     const user = req.user;
-    const TodoList = await TodoListModel.find({ id: user.id });
+    const TodoList = await TodoListModel.find({ user: user.id });
     res.status(200).json(TodoList);
   } catch (err) {
     res.status(500).json({ error: err });
   }
 });
 
-const createTodo = async (req: Request, res: Response) => {
+const createTodo = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const { job } = req.body;
-
+    const job = req.body;
     if (!job) {
       res.status(400);
       throw new Error('Missing requires params');
@@ -28,15 +27,15 @@ const createTodo = async (req: Request, res: Response) => {
       user: req.user.id,
     });
     await newTodo.save();
-    return res.status(200).json(newTodo);
+    res.status(200).json(newTodo);
   } catch (error) {
     res.status(500).json({ Error: error });
   }
-};
+});
 
-const updateTodo = async (req: Request, res: Response) => {
+const updateTodo = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const todo = await TodoListModel.findById(req.params.id);
+    const todo = await TodoListModel.findOne({ id: req.params.id });
 
     if (!todo) {
       res.status(400);
@@ -53,9 +52,8 @@ const updateTodo = async (req: Request, res: Response) => {
       res.status(401);
       throw new Error('User not found');
     }
-
     // Make sure the logged in user matches the goal user
-    if (todo.user?.toString !== req.user.id) {
+    if (String(todo.user) !== req.user.id) {
       res.status(401);
       throw new Error('User not authorized');
     }
@@ -66,15 +64,15 @@ const updateTodo = async (req: Request, res: Response) => {
       { new: true }
     );
 
-    return res.status(200).json(updateTodo);
+    res.status(200).json(updateTodo);
   } catch (error) {
     res.status(500).json({ Error: error });
   }
-};
+});
 
-const deleteTodo = async (req: Request, res: Response) => {
+const deleteTodo = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const todo = await TodoListModel.findById(req.params.id);
+    const todo = await TodoListModel.findOne({ id: req.params.id });
 
     if (!todo) {
       res.status(400);
@@ -91,17 +89,18 @@ const deleteTodo = async (req: Request, res: Response) => {
       res.status(401);
       throw new Error('User not found');
     }
-    // Make sure the logged in user matches the goal user
-    if (todo.user?.toString !== req.user.id) {
+
+    // Make sure the logged in user matches the todo user
+    if (String(todo.user) !== req.user.id) {
       res.status(401);
       throw new Error('User not authorized');
     }
     await todo.remove();
 
-    return res.status(200).json({ id: req.params.id });
+    res.status(200).json({ id: req.params.id });
   } catch (error) {
     res.status(500).json({ Error: error });
   }
-};
+});
 
 export { readTodoByUsername, createTodo, updateTodo, deleteTodo };
