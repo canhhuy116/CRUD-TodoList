@@ -4,7 +4,8 @@ declare global {
       PORT: number;
       URI_DB: string;
       JWT_SECRET: string;
-      NODE_ENV: 'development' | 'production';
+      // NODE_ENV: string;
+      JWT_RefreshToken: string;
     }
   }
   namespace Express {

@@ -22,4 +22,4 @@ const schema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const TodoListModel = mongoose.model('TodoList', schema);
+export const TodoListModel = mongoose.model('Todo', schema);
