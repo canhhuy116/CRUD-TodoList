@@ -1,91 +1,85 @@
-import { TodoListModel } from './../models/modelTodoList';
+import asyncHandler from 'express-async-handler';
+import { TodoListModel } from './../models/todosModel';
 import { Request, Response } from 'express';
 
-export const readTodoByUsername = async (req: Request, res: Response) => {
-  try {
-    const username = req.session.username;
-    const TodoList = await TodoListModel.find({ username: username });
-    res.status(200).json(TodoList);
-  } catch (err) {
-    res.status(500).json({ error: err });
+const readTodoByUsername = asyncHandler(async (req: Request, res: Response) => {
+  const user = req.user;
+  const TodoList = await TodoListModel.find({ user: user.id });
+  res.status(200).json(TodoList);
+});
+
+const createTodo = asyncHandler(async (req: Request, res: Response) => {
+  const job = req.body;
+  if (!job) {
+    res.status(400);
+    throw new Error('Missing requires params');
   }
-};
 
-export const createTodo = async (req: Request, res: Response) => {
-  try {
-    const { job, username } = req.body;
+  const newTodo = await TodoListModel.create({
+    id: job.id,
+    name: job.name,
+    description: job.description,
+    user: req.user.id,
+  });
+  await newTodo.save();
+  res.status(200).json(newTodo);
+});
 
-    if (!job || !username) {
-      return res.status(200).json({
-        message: 'missing requires params',
-      });
-    }
-    const newTodo = {
-      id: job.id,
-      name: job.name,
-      description: job.description,
-      username: username,
-    };
+const updateTodo = asyncHandler(async (req: Request, res: Response) => {
+  const todo = await TodoListModel.findOne({ id: req.params.id });
 
-    const todo = new TodoListModel(newTodo);
-    await todo.save();
-
-    return res.status(200).json(todo);
-  } catch (error) {
-    res.status(500).json({ Error: error });
+  if (!todo) {
+    res.status(400);
+    throw new Error('Todo not found');
   }
-};
 
-export const updateTodo = async (req: Request, res: Response) => {
-  try {
-    const updateTodo = req.body;
-    const username = req.session.username;
-
-    if (!updateTodo) {
-      return res.status(200).json({
-        message: 'missing requires params',
-      });
-    }
-    const checkTodo = await TodoListModel.findOne({ id: updateTodo.id });
-    if (checkTodo?.username !== username) {
-      return res.status(200).json({
-        message: 'Todo is not yours',
-      });
-    }
-
-    const todo = await TodoListModel.findOneAndUpdate(
-      { id: updateTodo.id },
-      updateTodo,
-      { new: true }
-    );
-
-    return res.status(200).json(todo);
-  } catch (error) {
-    res.status(500).json({ Error: error });
+  if (!req.body) {
+    res.status(400);
+    throw new Error('Missing requires params');
   }
-};
 
-export const deleteTodo = async (req: Request, res: Response) => {
-  try {
-    const todoID = req.params.id;
-    const username = req.session.username;
-
-    const checkTodo = await TodoListModel.findOne({ id: todoID });
-    if (checkTodo?.username !== username) {
-      return res.status(200).json({
-        message: 'Todo is not yours',
-      });
-    }
-
-    if (!todoID) {
-      return res.status(200).json({
-        message: 'missing requires params',
-      });
-    }
-    const todo = await TodoListModel.deleteOne({ id: todoID });
-
-    return res.status(200).json(todo);
-  } catch (error) {
-    res.status(500).json({ Error: error });
+  // Check for user
+  if (!req.user) {
+    res.status(401);
+    throw new Error('User not found');
   }
-};
+  // Make sure the logged in user matches the goal user
+  if (String(todo.user) !== req.user.id) {
+    res.status(401);
+    throw new Error('User not authorized');
+  }
+
+  const updateTodo = await TodoListModel.findOneAndUpdate(
+    { id: todo.id },
+    req.body,
+    { new: true }
+  );
+
+  res.status(200).json(updateTodo);
+});
+
+const deleteTodo = asyncHandler(async (req: Request, res: Response) => {
+  const todo = await TodoListModel.findOne({ id: req.params.id });
+
+  if (!todo) {
+    res.status(400);
+    throw new Error('Todo not found');
+  }
+
+  // Check for user
+  if (!req.user) {
+    res.status(401);
+    throw new Error('User not found');
+  }
+
+  // Make sure the logged in user matches the todo user
+  if (String(todo.user) !== req.user.id) {
+    res.status(401);
+    throw new Error('User not authorized');
+  }
+  await todo.remove();
+
+  res.status(200).json({ id: req.params.id });
+});
+
+export { readTodoByUsername, createTodo, updateTodo, deleteTodo };
